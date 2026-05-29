@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Required to send SMS via SmsManager. -->
+    <uses-permission android:name="android.permission.SEND_SMS" />
+
+    <!-- Required to read the device SMS inbox/sent list. -->
+    <uses-permission android:name="android.permission.READ_SMS" />
+
+    <!--
+        Required to read ServiceState and detect whether the device is currently
+        on a satellite (non-terrestrial) network on Android 15+.
+    -->
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+
+    <!-- The app needs telephony hardware to be useful, but should still install on tablets. -->
+    <uses-feature
+        android:name="android.hardware.telephony"
+        android:required="false" />
+
+    <application
+        android:name=".SmsDemoApplication"
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.SatelliteSmsDemo">
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:label="@string/app_name"
+            android:theme="@style/Theme.SatelliteSmsDemo">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+
+</manifest>

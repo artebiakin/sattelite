@@ -1,0 +1,33 @@
+<resources>
+    <string name="app_name">Satellite SMS Demo</string>
+
+    <!-- UI labels -->
+    <string name="label_recipient">Recipient phone number</string>
+    <string name="label_message">Message</string>
+    <string name="btn_send">Send SMS</string>
+    <string name="hint_recipient">e.g. +642712345678</string>
+    <string name="hint_message">Type your message…</string>
+    <string name="chars_remaining">%1$d chars · segment %2$d of %3$d</string>
+
+    <!-- Satellite status banner -->
+    <string name="sat_status_satellite">On satellite (non-terrestrial) network</string>
+    <string name="sat_status_terrestrial">On terrestrial cellular network</string>
+    <string name="sat_status_unknown">Satellite status unknown</string>
+    <string name="sat_status_no_permission">Phone permission needed for satellite status</string>
+
+    <!-- Permission rationale -->
+    <string name="perm_sms_rationale">SMS permission is required to send text messages.</string>
+    <string name="perm_phone_rationale">Phone State permission is needed to show the satellite network indicator.</string>
+    <string name="btn_grant_permissions">Grant permissions</string>
+
+    <!-- Status log -->
+    <string name="log_title">Status log</string>
+    <string name="log_empty">No messages sent yet.</string>
+    <string name="log_sent_ok">SENT: %1$s → OK</string>
+    <string name="log_sent_fail">SENT: %1$s → %2$s</string>
+    <string name="log_delivered">DELIVERED: %1$s</string>
+
+    <!-- Help section -->
+    <string name="help_title">How to test on One NZ satellite (New Zealand)</string>
+    <string name="help_body">1. Use a compatible phone: Samsung Galaxy S24 Ultra, Z Fold 6, Z Flip 6, or Oppo Find X8 Pro (more models being added).\n\n2. Insert a One NZ SIM with a plan that includes satellite coverage.\n\n3. Update to Android 15 or later to see the satellite network indicator.\n\n4. Go to a rural or remote location with no cell tower coverage.\n\n5. Step outside with a clear, unobstructed view of the sky.\n\n6. Wait ~30 seconds for the satellite network to acquire. The banner above will change to \"On satellite (non-terrestrial) network\" when ready.\n\n7. Enter a New Zealand mobile number and a short message, then tap Send SMS.\n\n8. Satellite SMS supports standard SMS only — no MMS, RCS, or iMessage.\n\n9. Delivery may take a minute or two depending on satellite pass overhead.</string>
+</resources>
