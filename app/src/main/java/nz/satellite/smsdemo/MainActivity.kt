@@ -21,7 +21,8 @@ class MainActivity : ComponentActivity() {
     ) { results ->
         val smsGranted = results[Manifest.permission.SEND_SMS] == true
         val phoneGranted = results[Manifest.permission.READ_PHONE_STATE] == true
-        viewModel.onPermissionsResult(smsGranted, phoneGranted)
+        val readSmsGranted = results[Manifest.permission.READ_SMS] == true
+        viewModel.onPermissionsResult(smsGranted, phoneGranted, readSmsGranted)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -33,6 +34,7 @@ class MainActivity : ComponentActivity() {
             arrayOf(
                 Manifest.permission.SEND_SMS,
                 Manifest.permission.READ_PHONE_STATE,
+                Manifest.permission.READ_SMS,
             ),
         )
 
@@ -47,11 +49,13 @@ class MainActivity : ComponentActivity() {
                     onRecipientChange = viewModel::onRecipientChange,
                     onMessageChange = viewModel::onMessageChange,
                     onSend = viewModel::sendSms,
+                    onRefreshMessages = viewModel::refreshSmsList,
                     onRequestPermissions = {
                         permissionLauncher.launch(
                             arrayOf(
                                 Manifest.permission.SEND_SMS,
                                 Manifest.permission.READ_PHONE_STATE,
+                                Manifest.permission.READ_SMS,
                             ),
                         )
                     },

@@ -4,6 +4,9 @@
     <!-- Required to send SMS via SmsManager. -->
     <uses-permission android:name="android.permission.SEND_SMS" />
 
+    <!-- Required to read the device SMS inbox/sent list. -->
+    <uses-permission android:name="android.permission.READ_SMS" />
+
     <!--
         Required to read ServiceState and detect whether the device is currently
         on a satellite (non-terrestrial) network on Android 15+.

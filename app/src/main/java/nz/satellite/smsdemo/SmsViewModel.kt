@@ -3,10 +3,12 @@ package nz.satellite.smsdemo
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 
@@ -17,13 +19,17 @@ data class UiState(
     val messageText: String = "",
     val smsSendPermissionGranted: Boolean = false,
     val phoneStatePermissionGranted: Boolean = false,
+    val readSmsPermissionGranted: Boolean = false,
     val log: List<LogEntry> = emptyList(),
     val isSending: Boolean = false,
+    val smsList: List<SmsMessage> = emptyList(),
+    val isSmsListLoading: Boolean = false,
 )
 
 class SmsViewModel(application: Application) : AndroidViewModel(application) {
 
     private val sender = SmsSender(application)
+    private val repository = SmsRepository(application)
     val satelliteMonitor = SatelliteStatusMonitor(application)
 
     private val _uiState = MutableStateFlow(UiState())
@@ -39,6 +45,7 @@ class SmsViewModel(application: Application) : AndroidViewModel(application) {
                         _uiState.update { it.copy(isSending = false) }
                         val desc = smsResultDescription(event.resultCode)
                         if (event.resultCode == android.app.Activity.RESULT_OK) {
+                            refreshSmsList()
                             LogEntry(now(), "SENT to ${event.recipient} (part ${event.partIndex + 1}): $desc")
                         } else {
                             LogEntry(now(), "SEND FAILED to ${event.recipient}: $desc")
@@ -55,14 +62,25 @@ class SmsViewModel(application: Application) : AndroidViewModel(application) {
     fun onRecipientChange(value: String) = _uiState.update { it.copy(recipient = value) }
     fun onMessageChange(value: String) = _uiState.update { it.copy(messageText = value) }
 
-    fun onPermissionsResult(smsGranted: Boolean, phoneGranted: Boolean) {
+    fun onPermissionsResult(smsGranted: Boolean, phoneGranted: Boolean, readSmsGranted: Boolean) {
         _uiState.update {
             it.copy(
                 smsSendPermissionGranted = smsGranted,
                 phoneStatePermissionGranted = phoneGranted,
+                readSmsPermissionGranted = readSmsGranted,
             )
         }
         if (phoneGranted) satelliteMonitor.start()
+        if (readSmsGranted) refreshSmsList()
+    }
+
+    fun refreshSmsList() {
+        if (!_uiState.value.readSmsPermissionGranted) return
+        viewModelScope.launch {
+            _uiState.update { it.copy(isSmsListLoading = true) }
+            val messages = withContext(Dispatchers.IO) { repository.loadMessages() }
+            _uiState.update { it.copy(smsList = messages, isSmsListLoading = false) }
+        }
     }
 
     fun sendSms() {
