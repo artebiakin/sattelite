@@ -1,19 +1,27 @@
-package nz.satellite.smsdemo
+package nz.satellite.smsdemo.ui
 
-import android.app.Application
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.Dispatchers
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import nz.satellite.smsdemo.SmsDemoApplication
+import nz.satellite.smsdemo.domain.SmsRepository
+import nz.satellite.smsdemo.domain.model.SatelliteState
+import nz.satellite.smsdemo.domain.model.SmsMessage
+import nz.satellite.smsdemo.domain.model.SmsSendEvent
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 
+/** A line in the on-screen status log. */
 data class LogEntry(val time: String, val message: String)
 
+/** Immutable UI state rendered by the screen. */
 data class UiState(
     val recipient: String = "",
     val messageText: String = "",
@@ -26,37 +34,36 @@ data class UiState(
     val isSmsListLoading: Boolean = false,
 )
 
-class SmsViewModel(application: Application) : AndroidViewModel(application) {
-
-    private val sender = SmsSender(application)
-    private val repository = SmsRepository(application)
-    val satelliteMonitor = SatelliteStatusMonitor(application)
+class SmsViewModel(private val repository: SmsRepository) : ViewModel() {
 
     private val _uiState = MutableStateFlow(UiState())
     val uiState: StateFlow<UiState> = _uiState
+
+    val satelliteState: StateFlow<SatelliteState> = repository.satelliteState
 
     private val timeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss")
 
     init {
         viewModelScope.launch {
-            sender.events.collect { event ->
-                val entry = when (event) {
-                    is SmsEvent.Sent -> {
-                        _uiState.update { it.copy(isSending = false) }
-                        val desc = smsResultDescription(event.resultCode)
-                        if (event.resultCode == android.app.Activity.RESULT_OK) {
-                            refreshSmsList()
-                            LogEntry(now(), "SENT to ${event.recipient} (part ${event.partIndex + 1}): $desc")
-                        } else {
-                            LogEntry(now(), "SEND FAILED to ${event.recipient}: $desc")
-                        }
-                    }
-                    is SmsEvent.Delivered ->
-                        LogEntry(now(), "DELIVERED to ${event.recipient} (part ${event.partIndex + 1})")
-                }
-                _uiState.update { it.copy(log = listOf(entry) + it.log) }
-            }
+            repository.sendEvents.collect { event -> onSendEvent(event) }
         }
+    }
+
+    private fun onSendEvent(event: SmsSendEvent) {
+        val entry = when (event) {
+            is SmsSendEvent.Sent -> {
+                _uiState.update { it.copy(isSending = false) }
+                if (event.success) {
+                    refreshSmsList()
+                    LogEntry(now(), "SENT to ${event.recipient} (part ${event.partIndex + 1}): ${event.description}")
+                } else {
+                    LogEntry(now(), "SEND FAILED to ${event.recipient}: ${event.description}")
+                }
+            }
+            is SmsSendEvent.Delivered ->
+                LogEntry(now(), "DELIVERED to ${event.recipient} (part ${event.partIndex + 1})")
+        }
+        _uiState.update { it.copy(log = listOf(entry) + it.log) }
     }
 
     fun onRecipientChange(value: String) = _uiState.update { it.copy(recipient = value) }
@@ -70,7 +77,7 @@ class SmsViewModel(application: Application) : AndroidViewModel(application) {
                 readSmsPermissionGranted = readSmsGranted,
             )
         }
-        if (phoneGranted) satelliteMonitor.start()
+        if (phoneGranted) repository.startSatelliteMonitoring()
         if (readSmsGranted) refreshSmsList()
     }
 
@@ -78,7 +85,7 @@ class SmsViewModel(application: Application) : AndroidViewModel(application) {
         if (!_uiState.value.readSmsPermissionGranted) return
         viewModelScope.launch {
             _uiState.update { it.copy(isSmsListLoading = true) }
-            val messages = withContext(Dispatchers.IO) { repository.loadMessages() }
+            val messages = repository.loadMessages()
             _uiState.update { it.copy(smsList = messages, isSmsListLoading = false) }
         }
     }
@@ -90,13 +97,22 @@ class SmsViewModel(application: Application) : AndroidViewModel(application) {
         _uiState.update { it.copy(isSending = true) }
         val entry = LogEntry(now(), "Sending to ${state.recipient}…")
         _uiState.update { it.copy(log = listOf(entry) + it.log) }
-        sender.send(state.recipient.trim(), state.messageText)
+        repository.sendSms(state.recipient.trim(), state.messageText)
     }
 
     override fun onCleared() {
         super.onCleared()
-        satelliteMonitor.stop()
+        repository.stopSatelliteMonitoring()
     }
 
     private fun now(): String = LocalTime.now().format(timeFormatter)
+
+    companion object {
+        val Factory: ViewModelProvider.Factory = viewModelFactory {
+            initializer {
+                val app = this[APPLICATION_KEY] as SmsDemoApplication
+                SmsViewModel(app.smsRepository)
+            }
+        }
+    }
 }

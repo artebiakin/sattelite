@@ -73,13 +73,33 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 
 ## Architecture
 
+Layered, with a one-directional dependency rule: **UI → Domain → Data**. The data
+layer never imports UI; the UI layer depends only on the domain `SmsRepository`
+interface. There is no domain use-case layer — the logic isn't shared across
+ViewModels or complex enough to justify it.
+
 ```
-MainActivity           -> permission launcher, Compose host
-SmsViewModel           -> UI state, orchestrates sender + monitor
-SmsSender              -> SmsManager wrapper, PendingIntent receivers, Flow<SmsEvent>
-SmsResultCodes         -> pure result-code -> string mapping (unit-tested)
-SatelliteStatusMonitor -> TelephonyCallback -> StateFlow<SatelliteState>
-ui/SmsDemoScreen       -> Compose UI (satellite banner, form, log, help card)
+nz.satellite.smsdemo
+├── SmsDemoApplication            tiny manual-DI container (provides SmsRepository)
+├── MainActivity                  permission launcher + Compose host
+│
+├── ui/                           UI layer (dumb Composables + ViewModel)
+│   ├── SmsViewModel              holds UiState, calls into the repository
+│   ├── SmsDemoScreen             Send tab: satellite banner, form, log, help
+│   ├── SmsListScreen             Messages tab: inbox/sent list
+│   └── theme/
+│
+├── domain/                       domain layer (framework-free)
+│   ├── SmsRepository             interface — the UI's only dependency
+│   └── model/                    SmsMessage, SmsType, SatelliteState, SmsSendEvent
+│
+└── data/                         data layer (single source of truth)
+    ├── SmsRepositoryImpl         coordinates the data sources, exposes domain models
+    ├── SmsResultMapper           result-code -> string (unit-tested)
+    └── source/
+        ├── SmsSenderDataSource       SmsManager + PendingIntent receivers
+        ├── SmsContentDataSource      ContentResolver over content://sms
+        └── SatelliteStatusDataSource TelephonyCallback -> SatelliteState
 ```
 
 ## How satellite SMS works

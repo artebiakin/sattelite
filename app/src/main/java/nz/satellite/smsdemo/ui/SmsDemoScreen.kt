@@ -48,10 +48,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import nz.satellite.smsdemo.LogEntry
 import nz.satellite.smsdemo.R
-import nz.satellite.smsdemo.SatelliteState
-import nz.satellite.smsdemo.UiState
+import nz.satellite.smsdemo.domain.model.SatelliteState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

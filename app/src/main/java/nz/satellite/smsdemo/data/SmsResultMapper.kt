@@ -1,11 +1,12 @@
-package nz.satellite.smsdemo
+package nz.satellite.smsdemo.data
 
 import android.app.Activity
 import android.telephony.SmsManager
 
 /**
- * Maps SmsManager result codes to human-readable strings.
- * Pure function — no Android framework calls — so it can be JVM unit-tested.
+ * Maps SmsManager result codes to human-readable strings. Lives in the data
+ * layer because it is the only thing that understands Android framework codes.
+ * Pure function — no framework calls — so it can be JVM unit-tested.
  */
 fun smsResultDescription(resultCode: Int): String = when (resultCode) {
     Activity.RESULT_OK -> "Sent successfully"

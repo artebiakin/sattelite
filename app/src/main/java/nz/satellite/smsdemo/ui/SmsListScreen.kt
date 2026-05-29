@@ -28,8 +28,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import nz.satellite.smsdemo.SmsMessage
-import nz.satellite.smsdemo.SmsType
+import nz.satellite.smsdemo.domain.model.SmsMessage
+import nz.satellite.smsdemo.domain.model.SmsType
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale

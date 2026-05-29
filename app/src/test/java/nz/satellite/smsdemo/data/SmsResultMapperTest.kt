@@ -1,4 +1,4 @@
-package nz.satellite.smsdemo
+package nz.satellite.smsdemo.data
 
 import android.app.Activity
 import android.telephony.SmsManager
@@ -6,7 +6,7 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-class SmsResultCodesTest {
+class SmsResultMapperTest {
 
     @Test
     fun resultOk_returnsSuccessDescription() {

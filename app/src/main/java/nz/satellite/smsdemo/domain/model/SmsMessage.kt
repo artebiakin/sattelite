@@ -1,5 +1,6 @@
-package nz.satellite.smsdemo
+package nz.satellite.smsdemo.domain.model
 
+/** A single SMS message as exposed to the rest of the app. */
 data class SmsMessage(
     val id: Long,
     val address: String,

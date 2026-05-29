@@ -1,13 +1,17 @@
-package nz.satellite.smsdemo
+package nz.satellite.smsdemo.data.source
 
 import android.content.Context
 import android.net.Uri
 import android.provider.Telephony
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import nz.satellite.smsdemo.domain.model.SmsMessage
+import nz.satellite.smsdemo.domain.model.SmsType
 
-class SmsRepository(private val context: Context) {
+/** Reads SMS from the system content provider and maps cursor rows to domain models. */
+class SmsContentDataSource(private val context: Context) {
 
-    fun loadMessages(limit: Int = 100): List<SmsMessage> {
-        val uri = Uri.parse("content://sms")
+    suspend fun loadMessages(limit: Int): List<SmsMessage> = withContext(Dispatchers.IO) {
         val projection = arrayOf(
             Telephony.Sms._ID,
             Telephony.Sms.ADDRESS,
@@ -19,7 +23,7 @@ class SmsRepository(private val context: Context) {
 
         val messages = mutableListOf<SmsMessage>()
         context.contentResolver.query(
-            uri,
+            Uri.parse("content://sms"),
             projection,
             null,
             null,
@@ -39,17 +43,19 @@ class SmsRepository(private val context: Context) {
                         address = cursor.getString(addrIdx) ?: "",
                         body = cursor.getString(bodyIdx) ?: "",
                         dateMs = cursor.getLong(dateIdx),
-                        type = when (cursor.getInt(typeIdx)) {
-                            Telephony.Sms.MESSAGE_TYPE_INBOX -> SmsType.Inbox
-                            Telephony.Sms.MESSAGE_TYPE_SENT -> SmsType.Sent
-                            Telephony.Sms.MESSAGE_TYPE_DRAFT -> SmsType.Draft
-                            else -> SmsType.Other
-                        },
+                        type = cursor.getInt(typeIdx).toSmsType(),
                         read = cursor.getInt(readIdx) == 1,
                     )
                 )
             }
         }
-        return messages
+        messages
+    }
+
+    private fun Int.toSmsType(): SmsType = when (this) {
+        Telephony.Sms.MESSAGE_TYPE_INBOX -> SmsType.Inbox
+        Telephony.Sms.MESSAGE_TYPE_SENT -> SmsType.Sent
+        Telephony.Sms.MESSAGE_TYPE_DRAFT -> SmsType.Draft
+        else -> SmsType.Other
     }
 }
