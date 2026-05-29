@@ -22,8 +22,6 @@ fun smsResultDescription(resultCode: Int): String = when (resultCode) {
     SmsManager.RESULT_RIL_NETWORK_REJECT -> "Network rejected the message"
     SmsManager.RESULT_RIL_INVALID_STATE -> "Invalid modem state"
     SmsManager.RESULT_RIL_INVALID_SMSC_ADDRESS -> "Invalid SMSC address"
-    SmsManager.RESULT_RIL_MODEM_ERROR -> "Modem error"
-    SmsManager.RESULT_RIL_NETWORK_ERROR -> "Network error"
     SmsManager.RESULT_RIL_INTERNAL_ERR -> "RIL internal error"
     SmsManager.RESULT_RIL_REQUEST_NOT_SUPPORTED -> "Request not supported by modem"
     SmsManager.RESULT_RIL_INVALID_ARGUMENTS -> "Invalid arguments"
