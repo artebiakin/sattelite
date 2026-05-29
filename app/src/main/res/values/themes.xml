@@ -1,0 +1,4 @@
+<resources>
+    <!-- Base application theme. Uses Material3 dynamic-color / Compose-driven theming. -->
+    <style name="Theme.SatelliteSmsDemo" parent="android:Theme.Material.Light.NoActionBar" />
+</resources>
